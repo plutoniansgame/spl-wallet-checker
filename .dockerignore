@@ -1,0 +1,14 @@
+.git/
+.github/
+.husky/
+.vscode/
+
+e2e/
+
+**/node_modules/
+**/.next/
+
+Dockerfile
+init.js
+local-ssl-config.json
+

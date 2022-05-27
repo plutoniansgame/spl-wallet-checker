@@ -1,0 +1,22 @@
+{
+  "FileSection": {
+    "file": "Bestand",
+    "upload-csv": "Upload CSV",
+    "first-row-are-titles": "Eerste rij zijn titles.",
+    "addresses-in-column": "Adressen in kolom"
+  },
+  "SolSection": {
+    "solana": "Solana",
+    "min-needed": "Minimum Solana nodig"
+  },
+  "TokenSection":{
+    "title": "Check voor tokens (en hoeveelheden)",
+    "token-mint": "Token mint",
+    "min-amount": "Minimum aantal"
+  },
+  "RPCSection":{
+    "title": "RPC",
+    "url": "URL",
+    "requests-per-second": "Aantal requests per seconde"
+  }
+}

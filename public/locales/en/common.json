@@ -1,0 +1,22 @@
+{
+  "FileSection":{
+    "title": "File",
+    "upload-csv": "Upload CSV",
+    "first-row-are-titles": "First row are titles",
+    "addresses-in-column": "Addresses in column"
+  },
+  "SolSection": {
+    "solana": "Solana",
+    "min-needed": "Min. Sol needed"
+  },
+  "TokenSection":{
+    "title": "Check for tokens (and amounts)",
+    "token-mint": "Token address",
+    "min-amount": "Min. amount"
+  },
+  "RPCSection":{
+    "title": "RPC",
+    "url": "URL",
+    "requests-per-second": "Requests per second"
+  }
+}

@@ -1,0 +1,8 @@
+**/.next
+**/next-env.d.ts
+**/node_modules
+**/public
+**/dist
+**/generated
+pnpm-lock.yaml
+.pnpm-store

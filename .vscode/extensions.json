@@ -1,0 +1,10 @@
+{
+  "recommendations": [
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode",
+    "ms-azuretools.vscode-docker",
+    "eamodio.gitlens",
+    "pflannery.vscode-versionlens",
+    "streetsidesoftware.code-spell-checker"
+  ]
+}

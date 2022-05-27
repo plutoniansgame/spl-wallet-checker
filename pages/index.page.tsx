@@ -1,0 +1,86 @@
+import FileUploadIcon from "@mui/icons-material/FileUpload";
+import { Box, Button, Checkbox, FormControlLabel, Grid, Input, TextField, Typography } from "@mui/material";
+import type { GetStaticProps, NextPage } from "next";
+import Head from "next/head";
+import { serverSideTranslations } from "next-i18next/serverSideTranslations";
+import { useState } from "react";
+import { useTranslation } from "react-i18next";
+
+type Token = {
+  mint: string;
+  amount: string;
+};
+const Home: NextPage = () => {
+  const { t } = useTranslation("common");
+  const [fileHasTitles, setFileHasTitles] = useState(false);
+  const [tokenArray, setTokenArray] = useState<Token[]>([{ mint: "", amount: "" }]);
+  function changeTitleCheckbox() {
+    setFileHasTitles(!fileHasTitles);
+  }
+
+  return (
+    <Box sx={{ width: "100%", display: "flex", justifyContent: "center" }}>
+      <Head>
+        <title>spl-wallet-checker</title>
+        <meta name="description" />
+        <link rel="icon" href="/favicon.ico" />
+      </Head>
+      <Grid container spacing={12}>
+        <Grid item xs={2} display="flex" flexDirection={"column"}>
+          <Typography variant="h3">{t("FileSection.title")}</Typography>
+          <label htmlFor={"upload-button"}>
+            <Input
+              id={"upload-button"}
+              type="file"
+              sx={{ display: "none" }}
+              inputProps={{ accept: ".csv" }}
+              onChange={() => console.log("selected file")}
+            />
+            <Button color="primary" component="span">
+              <FileUploadIcon /> {t("FileSection.upload-csv")}
+            </Button>
+          </label>
+          <FormControlLabel
+            control={<Checkbox checked={fileHasTitles} onChange={changeTitleCheckbox} />}
+            label={t("FileSection.first-row-are-titles") as string}
+          />
+          <TextField label={t("FileSection.addresses-in-column")} variant="outlined" />
+        </Grid>
+        <Grid item xs={2}>
+          <Typography variant="h3">{t("SolSection.solana")}</Typography>
+          <TextField label={t("SolSection.min-needed")} variant="outlined" />
+        </Grid>
+        <Grid item xs={5}>
+          <Typography variant="h3">{t("TokenSection.title")}</Typography>
+          <Box>
+            {tokenArray.map((token, index) => (
+              <Box key={index}>
+                <TextField sx={{ width: "500px" }} label={t("TokenSection.token-mint")} variant="outlined" />
+                <TextField
+                  sx={{ width: "150px", marginLeft: 1 }}
+                  label={t("TokenSection.min-amount")}
+                  variant="outlined"
+                />
+              </Box>
+            ))}
+          </Box>
+        </Grid>
+        <Grid item xs={3}>
+          <Typography variant="h3">{t("RPCSection.title")}</Typography>
+          <TextField label={t("RPCSection.url")} variant="outlined" />
+          <TextField sx={{ marginTop: 1 }} label={t("RPCSection.requests-per-second")} variant="outlined" />
+        </Grid>
+      </Grid>
+    </Box>
+  );
+};
+
+export const getStaticProps: GetStaticProps = async ({ locale }) => {
+  return {
+    props: {
+      ...(await serverSideTranslations(locale as string, ["common"])),
+    },
+  };
+};
+
+export default Home;

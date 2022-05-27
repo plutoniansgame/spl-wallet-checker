@@ -1,0 +1,31 @@
+{
+  "parser": "@typescript-eslint/parser",
+  "extends": ["next/core-web-vitals", "plugin:react-hooks/recommended", "prettier"],
+  "plugins": ["@typescript-eslint", "simple-import-sort", "unused-imports"],
+  "rules": {
+    "@next/next/no-html-link-for-pages": "off",
+    "no-var": "error",
+    "sort-imports": "off",
+    "simple-import-sort/imports": "error",
+    "simple-import-sort/exports": "error",
+    "unused-imports/no-unused-imports": "error",
+    "@typescript-eslint/no-explicit-any": "error",
+    "@typescript-eslint/no-unused-vars": [
+      "error",
+      {
+        "args": "none"
+      }
+    ],
+    "no-restricted-imports": [
+      "error",
+      {
+        "paths": [
+          {
+            "name": "@mui/icons-material",
+            "message": "Import the icon directly: import IconName from \"@mui/icons-material/IconName\""
+          }
+        ]
+      }
+    ]
+  }
+}
