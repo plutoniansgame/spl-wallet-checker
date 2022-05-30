@@ -13,7 +13,7 @@ export const customTheme = () => {
       },
       secondary: { ...secondaryColors },
       text: {
-        primary: primaryColors.light,
+        primary: secondaryColors.main,
       },
     },
     components: {},
