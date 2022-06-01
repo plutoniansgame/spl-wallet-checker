@@ -1,11 +1,11 @@
 import FileUploadIcon from "@mui/icons-material/FileUpload";
 import { Box, Button, Checkbox, FormControlLabel, Grid, Input, TextField, Typography } from "@mui/material";
+import { convertLetterToNumber } from "helpers/convert-letter-to-number";
 import type { GetStaticProps, NextPage } from "next";
 import Head from "next/head";
 import { serverSideTranslations } from "next-i18next/serverSideTranslations";
-import { useState } from "react";
+import { ChangeEvent, useState } from "react";
 import { useTranslation } from "react-i18next";
-
 type Token = {
   mint: string;
   amount: string;
@@ -28,6 +28,32 @@ const Home: NextPage = () => {
     newTokenArray[index].amount = value;
     setTokenArray(newTokenArray);
   }
+  function procesCSV(csv: string) {
+    const rows = csv
+      .slice(fileHasTitles ? csv.indexOf("\n") : 0)
+      .split("\n")
+      .filter((e) => e);
+
+    const wallets = rows.map((row) => {
+      const values = row.split(`,`);
+      return {
+        solanaWallet: values[convertLetterToNumber(addressColumn)],
+      };
+    });
+
+    console.log(wallets);
+  }
+  function fileChangeHandler(event: ChangeEvent<HTMLInputElement>) {
+    if (event.target.files && event.target.files?.length > 0) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const text = e.target?.result as string;
+        procesCSV(text);
+      };
+
+      reader.readAsText(event.target.files[0]);
+    }
+  }
   return (
     <Box sx={{ width: "100%", display: "flex", justifyContent: "center" }}>
       <Head>
@@ -44,7 +70,7 @@ const Home: NextPage = () => {
               type="file"
               sx={{ display: "none" }}
               inputProps={{ accept: ".csv" }}
-              onChange={() => console.log("selected file")}
+              onChange={fileChangeHandler}
             />
             <Button color="primary" component="span">
               <FileUploadIcon /> {t("FileSection.upload-csv")}
