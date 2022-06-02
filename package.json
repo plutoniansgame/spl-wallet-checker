@@ -19,6 +19,7 @@
     "@mui/material": "^5.4.3",
     "@mui/system": "^5.2.8",
     "@mui/x-data-grid": "^5.5.1",
+    "@solana/web3.js": "^1.43.4",
     "@types/date-fns": "^2.6.0",
     "@typescript-eslint/eslint-plugin": "^5.17.0",
     "@typescript-eslint/parser": "^5.0.0",

@@ -11,6 +11,7 @@
   },
   "TokenSection":{
     "title": "Check for tokens (and amounts)",
+    "token-name": "Token name",
     "token-mint": "Token address",
     "min-amount": "Min. amount"
   },

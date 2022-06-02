@@ -11,6 +11,7 @@
   },
   "TokenSection":{
     "title": "Check voor tokens (en hoeveelheden)",
+    "token-name": "Token naam",
     "token-mint": "Token mint",
     "min-amount": "Minimum aantal"
   },
