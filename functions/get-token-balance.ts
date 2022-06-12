@@ -26,7 +26,7 @@ export async function getTokenBalance(tokens: Token[], wallets: Wallets, solConn
           await sleep(500);
           const tokenAccountBalance = await solConnection.getTokenAccountBalance(tokenAccount.value[0].pubkey);
           if (tokenAccountBalance.value.uiAmount! < tokenAmount) {
-            if (index) index.errors.push(`Doesn't have the required amount of ${token.name}  (${tokenAmount})`);
+            if (index) index.errors.push(`Doesn't have the required amount of ${token.name} (${tokenAmount})`);
             else
               errorWallets.push({
                 wallet,
