@@ -1,6 +1,7 @@
 import FileUploadIcon from "@mui/icons-material/FileUpload";
 import { Box, Button, Checkbox, FormControlLabel, Grid, Input, TextField, Typography } from "@mui/material";
 import * as solanaWeb3 from "@solana/web3.js";
+import { getSolanaBalance } from "functions/get-solana-balance";
 import { getTokenBalance } from "functions/get-token-balance";
 import { validSolanaWallets } from "functions/valid-solana-wallet";
 import { convertLetterToNumber } from "helpers/convert-letter-to-number";
@@ -16,10 +17,10 @@ export type Token = {
   amount: string;
 };
 export type Wallets = {
-  validWallets: string[];
-  invalidWallets: InvalidWallet[];
+  validSolanaWallets: string[];
+  errorWallets: ErrorWallet[];
 };
-export type InvalidWallet = {
+export type ErrorWallet = {
   wallet: string;
   errors: string[];
 };
@@ -72,8 +73,9 @@ const Home: NextPage = () => {
 
   async function validateWallets(inputWallets: string[]) {
     let wallets = validSolanaWallets(inputWallets);
-    const newwallets = await getTokenBalance(tokenArray, wallets, new solanaWeb3.Connection(urlRPC));
-    console.log(newwallets);
+    wallets = await getSolanaBalance(wallets, minumumSol, new solanaWeb3.Connection(urlRPC));
+    wallets = await getTokenBalance(tokenArray, wallets, new solanaWeb3.Connection(urlRPC));
+    console.log(wallets);
   }
 
   function fileChangeHandler(event: ChangeEvent<HTMLInputElement>) {

@@ -1,25 +1,28 @@
-import * as solanaWeb3 from "@solana/web3.js";
-import { InvalidWallet, Wallets } from "pages/index.page";
+import { PublicKey } from "@solana/web3.js";
+import { ErrorWallet, Wallets } from "pages/index.page";
 
 export function validSolanaWallets(wallets: string[]): Wallets {
-  const invalidWallets: InvalidWallet[] = [];
-  const validWallets: string[] = [];
+  const validSolanaWallets: string[] = [];
+  const errorWallets: ErrorWallet[] = [];
   wallets.map(async (wallet) => {
-    if (wallet.startsWith("0x")) invalidWallets.push({ wallet, errors: ["Ethereum wallet"] });
+    console.log(`Checking wallet ${wallet}`);
+    if (wallet.startsWith("0x")) errorWallets.push({ wallet, errors: ["Ethereum wallet"] });
     try {
-      const publickWallet = new solanaWeb3.PublicKey(wallet).toBytes();
-      const validwallet = solanaWeb3.PublicKey.isOnCurve(publickWallet);
+      const publickWallet = new PublicKey(wallet);
+      const validwallet = PublicKey.isOnCurve(publickWallet.toBuffer());
       if (!validwallet) {
-        const index = invalidWallets.find((w) => w.wallet === wallet);
-        if (index) index.errors.push("Solana wallet");
-        else invalidWallets.push({ wallet, errors: ["Invalid Solana wallet"] });
-      } else validWallets.push(wallet);
+        const index = errorWallets.find((w) => w.wallet === wallet);
+        if (index) index.errors.push("Invalid Solana wallet");
+        else errorWallets.push({ wallet, errors: ["Invalid Solana wallet"] });
+      } else validSolanaWallets.push(wallet);
     } catch (error) {
-      const index = invalidWallets.find((w) => w.wallet === wallet);
-      if (index) index.errors.push("Solana wallet");
-      else invalidWallets.push({ wallet, errors: ["Invalid Solana wallet"] });
+      const index = errorWallets.find((w) => w.wallet === wallet);
+      if (index) index.errors.push("Invalid Solana wallet");
+      else errorWallets.push({ wallet, errors: ["Invalid Solana wallet"] });
     }
   });
-
-  return { invalidWallets, validWallets };
+  errorWallets.forEach((entry) => {
+    validSolanaWallets.splice(validSolanaWallets.indexOf(entry.wallet), 1);
+  });
+  return { errorWallets, validSolanaWallets };
 }
