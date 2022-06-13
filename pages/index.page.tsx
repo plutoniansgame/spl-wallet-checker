@@ -1,5 +1,15 @@
 import FileUploadIcon from "@mui/icons-material/FileUpload";
-import { Box, Button, Checkbox, FormControlLabel, Grid, Input, TextField, Typography } from "@mui/material";
+import {
+  Box,
+  Button,
+  Checkbox,
+  FormControlLabel,
+  Grid,
+  Input,
+  LinearProgress,
+  TextField,
+  Typography,
+} from "@mui/material";
 import * as solanaWeb3 from "@solana/web3.js";
 import { getSolanaBalance } from "functions/get-solana-balance";
 import { getTokenBalance } from "functions/get-token-balance";
@@ -10,7 +20,8 @@ import Head from "next/head";
 import { serverSideTranslations } from "next-i18next/serverSideTranslations";
 import { ChangeEvent, useState } from "react";
 import { useTranslation } from "react-i18next";
-
+import { state } from "state/state";
+import { useSnapshot } from "valtio";
 export type Token = {
   name: string;
   mint: string;
@@ -24,6 +35,7 @@ export type ErrorWallet = {
   wallet: string;
   errors: string[];
 };
+
 const Home: NextPage = () => {
   const { t } = useTranslation("common");
   const [fileHasTitles, setFileHasTitles] = useState(false);
@@ -38,7 +50,7 @@ const Home: NextPage = () => {
   const [fileAsString, setFileAsString] = useState("");
   // const [errorWallets, setErrorWallets] = useState<InvalidWallet[]>([]);
   // const [validWallets, setValidWallets] = useState<string[]>([]);
-
+  const snap = useSnapshot(state);
   function updateTokenMints(index: number, mint: string) {
     const newTokenArray = [...tokenArray];
     newTokenArray[index].mint = mint;
@@ -72,6 +84,7 @@ const Home: NextPage = () => {
   }
 
   async function validateWallets(inputWallets: string[]) {
+    state.setInformation(inputWallets.length, 2 + tokenArray.length, tokenArray.length);
     let wallets = validSolanaWallets(inputWallets);
     wallets = await getSolanaBalance(wallets, minumumSol, new solanaWeb3.Connection(urlRPC));
     wallets = await getTokenBalance(tokenArray, wallets, new solanaWeb3.Connection(urlRPC));
@@ -93,112 +106,125 @@ const Home: NextPage = () => {
   function submit() {
     procesCSV(fileAsString);
   }
+
   return (
-    <Box sx={{ width: "100%", display: "flex", justifyContent: "center" }}>
-      <Head>
-        <title>spl-wallet-checker</title>
-        <meta name="description" />
-        <link rel="icon" href="/favicon.ico" />
-      </Head>
-      <Grid container spacing={12}>
-        <Grid item xs={2} display="flex" flexDirection={"column"}>
-          <Typography variant="h3">{t("FileSection.title")}</Typography>
-          <label htmlFor={"upload-button"}>
-            <Input
-              id={"upload-button"}
-              type="file"
-              sx={{ display: "none" }}
-              inputProps={{ accept: ".csv" }}
-              onChange={fileChangeHandler}
+    <>
+      <Box sx={{ width: "100%", display: "flex", justifyContent: "center" }}>
+        <Head>
+          <title>spl-wallet-checker</title>
+          <meta name="description" />
+          <link rel="icon" href="/favicon.ico" />
+        </Head>
+        <Grid container spacing={12}>
+          <Grid item xs={2} display="flex" flexDirection={"column"}>
+            <Typography variant="h3">{t("FileSection.title")}</Typography>
+            <label htmlFor={"upload-button"}>
+              <Input
+                id={"upload-button"}
+                type="file"
+                sx={{ display: "none" }}
+                inputProps={{ accept: ".csv" }}
+                onChange={fileChangeHandler}
+              />
+              <Button color="primary" component="span">
+                <FileUploadIcon /> {t("FileSection.upload-csv")}
+              </Button>
+            </label>
+            <FormControlLabel
+              control={<Checkbox checked={fileHasTitles} onChange={() => setFileHasTitles(!fileHasTitles)} />}
+              label={t("FileSection.first-row-are-titles") as string}
             />
-            <Button color="primary" component="span">
-              <FileUploadIcon /> {t("FileSection.upload-csv")}
-            </Button>
-          </label>
-          <FormControlLabel
-            control={<Checkbox checked={fileHasTitles} onChange={() => setFileHasTitles(!fileHasTitles)} />}
-            label={t("FileSection.first-row-are-titles") as string}
-          />
-          <TextField
-            label={t("FileSection.addresses-in-column")}
-            value={addressColumn}
-            onChange={(e) => setAddressColumn(e.target.value)}
-            variant="outlined"
-          />
-          <Button onClick={submit}>GO</Button>
+            <TextField
+              label={t("FileSection.addresses-in-column")}
+              value={addressColumn}
+              onChange={(e) => setAddressColumn(e.target.value)}
+              variant="outlined"
+            />
+            <Button onClick={submit}>GO</Button>
+          </Grid>
+          <Grid item xs={2}>
+            <Typography variant="h3">{t("SolSection.solana")}</Typography>
+            <TextField
+              value={minumumSol}
+              sx={{ width: "100%" }}
+              type="number"
+              label={t("SolSection.min-needed")}
+              inputProps={{ min: "0", max: "10", step: "0.25" }}
+              onChange={(e) => setMinimumSol(parseFloat(e.target.value))}
+            />
+          </Grid>
+          <Grid item xs={5}>
+            <Typography variant="h3">{t("TokenSection.title")}</Typography>
+            <Box>
+              {tokenArray.map((token, index) => (
+                <Box key={index}>
+                  <TextField
+                    sx={{ width: "100px" }}
+                    label={t("TokenSection.token-name")}
+                    value={token.name}
+                    variant="outlined"
+                    onChange={(e) => updateTokenNames(index, e.target.value)}
+                  />
+                  <TextField
+                    sx={{ width: "400px", marginLeft: 1 }}
+                    label={t("TokenSection.token-mint")}
+                    value={token.mint}
+                    variant="outlined"
+                    onChange={(e) => updateTokenMints(index, e.target.value)}
+                  />
+                  <TextField
+                    inputProps={{ min: "0", max: "100000", step: "1" }}
+                    type="number"
+                    value={token.amount}
+                    sx={{ width: "100px", marginLeft: 1 }}
+                    label={t("TokenSection.min-amount")}
+                    variant="outlined"
+                    onChange={(e) => updateTokenValues(index, e.target.value)}
+                  />
+                </Box>
+              ))}
+              <Button
+                onClick={() => {
+                  if (tokenArray.length != 3) setTokenArray([...tokenArray, { mint: "", amount: "", name: "" }]);
+                }}
+              >
+                Add
+              </Button>
+              <Button onClick={() => setTokenArray(tokenArray.slice(0, -1))}>Remove</Button>
+            </Box>
+          </Grid>
+          <Grid item xs={3} display="flex" flexDirection={"column"}>
+            <Typography variant="h3">{t("RPCSection.title")}</Typography>
+            <TextField
+              value={urlRPC}
+              label={t("RPCSection.url")}
+              onChange={(e) => setUrlRPC(e.target.value)}
+              variant="outlined"
+            />
+            <TextField
+              disabled={urlRPC == "https://api.mainnet-beta.solana.com"}
+              inputProps={{ min: "0", max: "500", step: "10" }}
+              sx={{ marginTop: 1 }}
+              type="number"
+              label={t("RPCSection.requests-per-second")}
+              variant="outlined"
+              value={reqPerSecond}
+              onChange={(e) => setReqPerSecond(parseFloat(e.target.value))}
+            />
+          </Grid>
         </Grid>
-        <Grid item xs={2}>
-          <Typography variant="h3">{t("SolSection.solana")}</Typography>
-          <TextField
-            value={minumumSol}
-            sx={{ width: "100%" }}
-            type="number"
-            label={t("SolSection.min-needed")}
-            inputProps={{ min: "0", max: "10", step: "0.25" }}
-            onChange={(e) => setMinimumSol(parseFloat(e.target.value))}
-          />
-        </Grid>
-        <Grid item xs={5}>
-          <Typography variant="h3">{t("TokenSection.title")}</Typography>
-          <Box>
-            {tokenArray.map((token, index) => (
-              <Box key={index}>
-                <TextField
-                  sx={{ width: "100px" }}
-                  label={t("TokenSection.token-name")}
-                  value={token.name}
-                  variant="outlined"
-                  onChange={(e) => updateTokenNames(index, e.target.value)}
-                />
-                <TextField
-                  sx={{ width: "400px", marginLeft: 1 }}
-                  label={t("TokenSection.token-mint")}
-                  value={token.mint}
-                  variant="outlined"
-                  onChange={(e) => updateTokenMints(index, e.target.value)}
-                />
-                <TextField
-                  inputProps={{ min: "0", max: "100000", step: "1" }}
-                  type="number"
-                  value={token.amount}
-                  sx={{ width: "100px", marginLeft: 1 }}
-                  label={t("TokenSection.min-amount")}
-                  variant="outlined"
-                  onChange={(e) => updateTokenValues(index, e.target.value)}
-                />
-              </Box>
-            ))}
-            <Button
-              onClick={() => {
-                if (tokenArray.length != 3) setTokenArray([...tokenArray, { mint: "", amount: "", name: "" }]);
-              }}
-            >
-              Add
-            </Button>
-            <Button onClick={() => setTokenArray(tokenArray.slice(0, -1))}>Remove</Button>
-          </Box>
-        </Grid>
-        <Grid item xs={3} display="flex" flexDirection={"column"}>
-          <Typography variant="h3">{t("RPCSection.title")}</Typography>
-          <TextField
-            value={urlRPC}
-            label={t("RPCSection.url")}
-            onChange={(e) => setUrlRPC(e.target.value)}
-            variant="outlined"
-          />
-          <TextField
-            disabled={urlRPC == "https://api.mainnet-beta.solana.com"}
-            inputProps={{ min: "0", max: "500", step: "10" }}
-            sx={{ marginTop: 1 }}
-            type="number"
-            label={t("RPCSection.requests-per-second")}
-            variant="outlined"
-            value={reqPerSecond}
-            onChange={(e) => setReqPerSecond(parseFloat(e.target.value))}
-          />
-        </Grid>
-      </Grid>
-    </Box>
+      </Box>
+      <Box sx={{ width: "100%" }}>
+        <Typography variant="body2" sx={{ textAlign: "center" }}>
+          {snap.message}
+        </Typography>
+        <LinearProgress variant="determinate" value={Math.round((snap.progress / snap.maxProgress) * 100)} />
+        <Typography variant="body2" sx={{ textAlign: "center" }}>
+          {/* Add Time Left */}
+          {snap.progress} / {snap.maxProgress}
+        </Typography>
+      </Box>
+    </>
   );
 };
 

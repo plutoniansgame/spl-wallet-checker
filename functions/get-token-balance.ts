@@ -1,6 +1,7 @@
 import * as solanaWeb3 from "@solana/web3.js";
 import { sleep } from "helpers/sleep";
 import { Token, Wallets } from "pages/index.page";
+import { state } from "state/state";
 
 export async function getTokenBalance(tokens: Token[], wallets: Wallets, solConnection: solanaWeb3.Connection) {
   const validSolanaWallets = wallets.validSolanaWallets;
@@ -10,7 +11,7 @@ export async function getTokenBalance(tokens: Token[], wallets: Wallets, solConn
   for (let wallet of validSolanaWallets) {
     const publickWallet = new solanaWeb3.PublicKey(wallet);
     for (let token of tokens) {
-      console.log(`Checking wallet ${wallet} for minimum balance of ${token.amount} ${token.name}`);
+      state.message = `Checking wallet ${wallet} for minimum balance of ${token.amount}  ${token.name}`;
       await sleep(500);
       const index = errorWallets.find((w) => w.wallet === wallet);
       try {
@@ -34,6 +35,7 @@ export async function getTokenBalance(tokens: Token[], wallets: Wallets, solConn
               });
           }
         }
+        state.progress = state.progress + 1;
       } catch (error) {
         if (error instanceof Error) {
           walletToRemoveFromValidWallets.push(wallet);
@@ -50,6 +52,8 @@ export async function getTokenBalance(tokens: Token[], wallets: Wallets, solConn
 
   if (walletToRemoveFromValidWallets.length > 0)
     walletToRemoveFromValidWallets.forEach((entry) => {
+      state.maxProgress = state.maxProgress - state.tokensToCheckCount;
+
       validSolanaWallets.splice(validSolanaWallets.indexOf(entry), 1);
     });
 
