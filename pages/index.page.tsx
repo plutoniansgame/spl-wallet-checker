@@ -7,6 +7,7 @@ import {
   Grid,
   Input,
   LinearProgress,
+  TextareaAutosize,
   TextField,
   Typography,
 } from "@mui/material";
@@ -48,9 +49,10 @@ const Home: NextPage = () => {
   const [urlRPC, setUrlRPC] = useState("https://api.mainnet-beta.solana.com");
   const [reqPerSecond, setReqPerSecond] = useState(10);
   const [fileAsString, setFileAsString] = useState("");
-  // const [errorWallets, setErrorWallets] = useState<InvalidWallet[]>([]);
-  // const [validWallets, setValidWallets] = useState<string[]>([]);
+  const [errorWalletsString, setErrorWalletsString] = useState<string[]>([]);
+  const [validWallets, setValidWallets] = useState<string[]>([]);
   const snap = useSnapshot(state);
+
   function updateTokenMints(index: number, mint: string) {
     const newTokenArray = [...tokenArray];
     newTokenArray[index].mint = mint;
@@ -88,7 +90,11 @@ const Home: NextPage = () => {
     let wallets = validSolanaWallets(inputWallets);
     wallets = await getSolanaBalance(wallets, minumumSol, new solanaWeb3.Connection(urlRPC));
     wallets = await getTokenBalance(tokenArray, wallets, new solanaWeb3.Connection(urlRPC));
-    console.log(wallets);
+
+    const errorWalletsAsString = wallets.errorWallets.map((errorWallet) => errorWallet.wallet);
+    const filteredValidWallets = wallets.validSolanaWallets.filter((wallet) => !errorWalletsAsString.includes(wallet));
+    setValidWallets(filteredValidWallets);
+    setErrorWalletsString(errorWalletsAsString);
   }
 
   function fileChangeHandler(event: ChangeEvent<HTMLInputElement>) {
@@ -104,18 +110,20 @@ const Home: NextPage = () => {
   }
 
   function submit() {
+    setValidWallets([]);
+    setErrorWalletsString([]);
     procesCSV(fileAsString);
   }
 
   return (
     <>
-      <Box sx={{ width: "100%", display: "flex", justifyContent: "center" }}>
+      <Box sx={{ width: "100%", display: "flex", justifyContent: "center", paddingBottom: 10 }}>
         <Head>
           <title>spl-wallet-checker</title>
           <meta name="description" />
           <link rel="icon" href="/favicon.ico" />
         </Head>
-        <Grid container spacing={12}>
+        <Grid container spacing={12} sx={{ height: "25rem" }}>
           <Grid item xs={2} display="flex" flexDirection={"column"}>
             <Typography variant="h3">{t("FileSection.title")}</Typography>
             <label htmlFor={"upload-button"}>
@@ -157,16 +165,16 @@ const Home: NextPage = () => {
             <Typography variant="h3">{t("TokenSection.title")}</Typography>
             <Box>
               {tokenArray.map((token, index) => (
-                <Box key={index}>
+                <Box key={index} sx={{ margin: 1 }}>
                   <TextField
-                    sx={{ width: "100px" }}
+                    sx={{ width: "100px", margin: 0.5 }}
                     label={t("TokenSection.token-name")}
                     value={token.name}
                     variant="outlined"
                     onChange={(e) => updateTokenNames(index, e.target.value)}
                   />
                   <TextField
-                    sx={{ width: "400px", marginLeft: 1 }}
+                    sx={{ width: "400px", margin: 0.5 }}
                     label={t("TokenSection.token-mint")}
                     value={token.mint}
                     variant="outlined"
@@ -176,7 +184,7 @@ const Home: NextPage = () => {
                     inputProps={{ min: "0", max: "100000", step: "1" }}
                     type="number"
                     value={token.amount}
-                    sx={{ width: "100px", marginLeft: 1 }}
+                    sx={{ width: "100px", margin: 0.5 }}
                     label={t("TokenSection.min-amount")}
                     variant="outlined"
                     onChange={(e) => updateTokenValues(index, e.target.value)}
@@ -214,15 +222,33 @@ const Home: NextPage = () => {
           </Grid>
         </Grid>
       </Box>
-      <Box sx={{ width: "100%" }}>
-        <Typography variant="body2" sx={{ textAlign: "center" }}>
-          {snap.message}
-        </Typography>
-        <LinearProgress variant="determinate" value={Math.round((snap.progress / snap.maxProgress) * 100)} />
-        <Typography variant="body2" sx={{ textAlign: "center" }}>
-          {/* Add Time Left */}
-          {snap.progress} / {snap.maxProgress}
-        </Typography>
+      <Box sx={{ width: "100%", display: "flex", justifyContent: "center" }}>
+        <Box sx={{ width: "50%" }}>
+          <Typography variant="body2" sx={{ textAlign: "center" }}>
+            {snap.message}
+          </Typography>
+          <LinearProgress variant="determinate" value={Math.round((snap.progress / snap.maxProgress) * 100)} />
+          <Typography variant="body2" sx={{ textAlign: "center" }}>
+            {/* Add Time Left */}
+            {snap.progress} / {snap.maxProgress}
+          </Typography>
+        </Box>
+      </Box>
+      <Box sx={{ width: "100%", display: "flex", justifyContent: "center", marginTop: 2.5 }}>
+        <Box sx={{ width: "50%", display: "flex", justifyContent: "space-between" }}>
+          <TextareaAutosize
+            minRows={20}
+            placeholder="Valid wallets"
+            value={validWallets}
+            style={{ width: 450, marginRight: "auto" }}
+          />
+          <TextareaAutosize
+            minRows={20}
+            placeholder="Error wallets"
+            value={errorWalletsString}
+            style={{ width: 450, marginLeft: "auto" }}
+          />
+        </Box>
       </Box>
     </>
   );

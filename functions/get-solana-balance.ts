@@ -9,7 +9,7 @@ export async function getSolanaBalance(wallets: Wallets, minValue: number, solCo
   const errorWallets = wallets.errorWallets;
   const walletToRemoveFromValidWallets = [];
   for (let wallet of validSolanaWallets) {
-    state.message = `Checking wallet ${wallet} for minimum balance of ${minValue} Solana`;
+    state.message = `Checking ${wallet} for minimum balance of ${minValue} Solana`;
     const index = errorWallets.find((w) => w.wallet === wallet);
 
     try {

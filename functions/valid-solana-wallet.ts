@@ -7,7 +7,7 @@ export function validSolanaWallets(wallets: string[]): Wallets {
   const errorWallets: ErrorWallet[] = [];
 
   wallets.map(async (wallet) => {
-    state.message = `Validating wallet ${wallet}`;
+    state.message = `Validating ${wallet}`;
     if (wallet.startsWith("0x")) errorWallets.push({ wallet, errors: ["Ethereum wallet"] });
     try {
       const publickWallet = new PublicKey(wallet);

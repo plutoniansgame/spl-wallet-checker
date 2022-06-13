@@ -11,7 +11,7 @@ export async function getTokenBalance(tokens: Token[], wallets: Wallets, solConn
   for (let wallet of validSolanaWallets) {
     const publickWallet = new solanaWeb3.PublicKey(wallet);
     for (let token of tokens) {
-      state.message = `Checking wallet ${wallet} for minimum balance of ${token.amount}  ${token.name}`;
+      state.message = `Checking ${wallet} for minimum balance of ${token.amount}  ${token.name}`;
       await sleep(500);
       const index = errorWallets.find((w) => w.wallet === wallet);
       try {
