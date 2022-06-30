@@ -11,11 +11,8 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import { useWallet } from "@solana/wallet-adapter-react";
-import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import * as solanaWeb3 from "@solana/web3.js";
-import { getPldBalance } from "functions/get-pld-balance";
-import { getSolanaBalance } from "functions/get-solana-balance";
+import { getCustomProgramAccounts } from "functions/get-custom-program-accounts";
 import { getTokenBalance } from "functions/get-token-balance";
 import { validSolanaWallets } from "functions/valid-solana-wallet";
 import { convertLetterToNumber } from "helpers/convert-letter-to-number";
@@ -25,22 +22,11 @@ import { serverSideTranslations } from "next-i18next/serverSideTranslations";
 import { ChangeEvent, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { state } from "state/state";
+import { Token, Wallets } from "state/types";
 import { useSnapshot } from "valtio";
-export type Token = {
-  name: string;
-  mint: string;
-  amount: string;
-};
-export type Wallets = {
-  validSolanaWallets: string[];
-  errorWallets: ErrorWallet[];
-};
-export type ErrorWallet = {
-  wallet: string;
-  errors: string[];
-};
-require("@solana/wallet-adapter-react-ui/styles.css");
 
+require("@solana/wallet-adapter-react-ui/styles.css");
+const urlRPC = "https://api.mainnet-beta.solana.com";
 const Home: NextPage = () => {
   const { t } = useTranslation("common");
   const [fileHasTitles, setFileHasTitles] = useState(false);
@@ -50,8 +36,6 @@ const Home: NextPage = () => {
     { mint: "EAefyXw6E8sny1cX3LTH6RSvtzH6E5EFy1XsE2AiH1f3", amount: "10000", name: "RPC" },
   ]);
   const [minumumSol, setMinimumSol] = useState(0.25);
-  const [urlRPC, setUrlRPC] = useState("https://api.mainnet-beta.solana.com");
-  const [reqPerSecond, setReqPerSecond] = useState(10);
   const [fileAsString, setFileAsString] = useState("");
   const [errorWalletsString, setErrorWalletsString] = useState<string[]>([]);
   const [validWallets, setValidWallets] = useState<string[]>([]);
@@ -90,19 +74,22 @@ const Home: NextPage = () => {
   }
 
   async function validateWallets(inputWallets: string[]) {
-    let enoughPLD: boolean = false;
     state.setInformation(inputWallets.length, 2 + tokenArray.length, tokenArray.length);
+    let wallets: Wallets = validSolanaWallets(inputWallets);
 
-    let wallets = validSolanaWallets(inputWallets);
+    const customProgramAccounts = await Promise.all(
+      tokenArray.map(async (token) => {
+        return await getCustomProgramAccounts(token.name, token.mint, new solanaWeb3.Connection(urlRPC));
+      }),
+    );
 
-    enoughPLD = await getPldBalance(publicKey, new solanaWeb3.Connection(urlRPC));
-    if (enoughPLD) wallets = await getSolanaBalance(wallets, minumumSol, new solanaWeb3.Connection(urlRPC));
+    // wallets = await getSolanaBalance(wallets, minumumSol, new solanaWeb3.Connection(urlRPC));
+    wallets = await getTokenBalance(wallets, tokenArray, customProgramAccounts);
 
-    enoughPLD = await getPldBalance(publicKey, new solanaWeb3.Connection(urlRPC));
-    if (enoughPLD) wallets = await getTokenBalance(tokenArray, wallets, new solanaWeb3.Connection(urlRPC));
-
-    const errorWalletsAsString = wallets.errorWallets.map((errorWallet) => errorWallet.wallet);
-    const filteredValidWallets = wallets.validSolanaWallets.filter((wallet) => !errorWalletsAsString.includes(wallet));
+    const errorWalletsAsString: string[] = wallets.errorWallets.map((errorWallet) => errorWallet.wallet);
+    const filteredValidWallets: string[] = wallets.validSolanaWallets.filter(
+      (wallet) => !errorWalletsAsString.includes(wallet),
+    );
     setValidWallets(filteredValidWallets);
     setErrorWalletsString(errorWalletsAsString);
   }
@@ -119,13 +106,11 @@ const Home: NextPage = () => {
     }
   }
 
-  function submit() {
+  async function submit() {
     setValidWallets([]);
     setErrorWalletsString([]);
     procesCSV(fileAsString);
   }
-
-  const { publicKey } = useWallet();
 
   return (
     <>
@@ -134,46 +119,39 @@ const Home: NextPage = () => {
         <meta name="description" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <Box sx={{ width: "100%", display: "flex", justifyContent: "flex-end" }}>
-        <WalletMultiButton />
-      </Box>
+
       <Box sx={{ width: "100%", display: "flex", justifyContent: "center", paddingBottom: 10 }}>
         <Grid container columnSpacing={12}>
+          <Grid item xs={2}></Grid>
           <Grid item xs={2} display="flex" flexDirection={"column"}>
             <Typography variant="h3">{t("FileSection.title")}</Typography>
             <label htmlFor={"upload-button"}>
               <Input
-                disabled={!publicKey}
                 id={"upload-button"}
                 type="file"
                 sx={{ display: "none" }}
                 inputProps={{ accept: ".csv" }}
                 onChange={fileChangeHandler}
               />
-              <Button color="primary" component="span" disabled={!publicKey}>
+              <Button color="primary" component="span">
                 <FileUploadIcon /> {t("FileSection.upload-csv")}
               </Button>
             </label>
             <FormControlLabel
-              disabled={!publicKey}
               control={<Checkbox checked={fileHasTitles} onChange={() => setFileHasTitles(!fileHasTitles)} />}
               label={t("FileSection.first-row-are-titles") as string}
             />
             <TextField
-              disabled={!publicKey}
               label={t("FileSection.addresses-in-column")}
               value={addressColumn}
               onChange={(e) => setAddressColumn(e.target.value)}
               variant="outlined"
             />
-            <Button disabled={!publicKey} onClick={submit}>
-              GO
-            </Button>
+            <Button onClick={submit}>GO</Button>
           </Grid>
           <Grid item xs={2}>
             <Typography variant="h3">{t("SolSection.solana")}</Typography>
             <TextField
-              disabled={!publicKey}
               value={minumumSol}
               sx={{ width: "100%" }}
               type="number"
@@ -188,7 +166,6 @@ const Home: NextPage = () => {
               {tokenArray.map((token, index) => (
                 <Box key={index} sx={{ margin: 1 }}>
                   <TextField
-                    disabled={!publicKey}
                     sx={{ width: "100px", margin: 0.5 }}
                     label={t("TokenSection.token-name")}
                     value={token.name}
@@ -196,7 +173,6 @@ const Home: NextPage = () => {
                     onChange={(e) => updateTokenNames(index, e.target.value)}
                   />
                   <TextField
-                    disabled={!publicKey}
                     sx={{ width: "400px", margin: 0.5 }}
                     label={t("TokenSection.token-mint")}
                     value={token.mint}
@@ -204,7 +180,6 @@ const Home: NextPage = () => {
                     onChange={(e) => updateTokenMints(index, e.target.value)}
                   />
                   <TextField
-                    disabled={!publicKey}
                     inputProps={{ min: "0", max: "100000", step: "1" }}
                     type="number"
                     value={token.amount}
@@ -216,37 +191,14 @@ const Home: NextPage = () => {
                 </Box>
               ))}
               <Button
-                disabled={!publicKey}
                 onClick={() => {
                   if (tokenArray.length != 3) setTokenArray([...tokenArray, { mint: "", amount: "", name: "" }]);
                 }}
               >
                 Add
               </Button>
-              <Button disabled={!publicKey} onClick={() => setTokenArray(tokenArray.slice(0, -1))}>
-                Remove
-              </Button>
+              <Button onClick={() => setTokenArray(tokenArray.slice(0, -1))}>Remove</Button>
             </Box>
-          </Grid>
-          <Grid item xs={3} display="flex" flexDirection={"column"}>
-            <Typography variant="h3">{t("RPCSection.title")}</Typography>
-            <TextField
-              disabled={!publicKey}
-              value={urlRPC}
-              label={t("RPCSection.url")}
-              onChange={(e) => setUrlRPC(e.target.value)}
-              variant="outlined"
-            />
-            <TextField
-              disabled={urlRPC == "https://api.mainnet-beta.solana.com" || !publicKey}
-              inputProps={{ min: "0", max: "500", step: "10" }}
-              sx={{ marginTop: 1 }}
-              type="number"
-              label={t("RPCSection.requests-per-second")}
-              variant="outlined"
-              value={reqPerSecond}
-              onChange={(e) => setReqPerSecond(parseFloat(e.target.value))}
-            />
           </Grid>
         </Grid>
       </Box>
@@ -266,14 +218,12 @@ const Home: NextPage = () => {
         <Box sx={{ width: "50%", display: "flex", justifyContent: "space-between" }}>
           <TextareaAutosize
             minRows={20}
-            disabled={!publicKey}
             placeholder="Valid wallets"
             value={validWallets}
             style={{ width: 450, marginRight: "auto" }}
           />
           <TextareaAutosize
             minRows={20}
-            disabled={!publicKey}
             placeholder="Error wallets"
             value={errorWalletsString}
             style={{ width: 450, marginLeft: "auto" }}

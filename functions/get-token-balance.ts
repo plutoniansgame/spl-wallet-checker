@@ -1,40 +1,41 @@
-import * as solanaWeb3 from "@solana/web3.js";
-import { sleep } from "helpers/sleep";
-import { Token, Wallets } from "pages/index.page";
 import { state } from "state/state";
 
-export async function getTokenBalance(tokens: Token[], wallets: Wallets, solConnection: solanaWeb3.Connection) {
+import { CustomProgramAccount, Token, Wallets } from "./../state/types";
+
+export function getTokenBalance(
+  wallets: Wallets,
+  tokens: Token[],
+  customProgramAccount: CustomProgramAccount[],
+): Wallets {
   const validSolanaWallets = wallets.validSolanaWallets;
   const errorWallets = wallets.errorWallets;
   const walletToRemoveFromValidWallets = [];
 
   for (let wallet of validSolanaWallets) {
-    const publickWallet = new solanaWeb3.PublicKey(wallet);
     for (let token of tokens) {
       state.message = `Checking ${wallet} for minimum balance of ${token.amount}  ${token.name}`;
-      await sleep(500);
       const index = errorWallets.find((w) => w.wallet === wallet);
       try {
-        const mint = new solanaWeb3.PublicKey(token.mint);
-        const tokenAmount = parseInt(token.amount);
-        const tokenAccount = await solConnection.getTokenAccountsByOwner(publickWallet, { mint: mint });
+        const tokenRequiredAmount = parseInt(token.amount);
+        const programAccount = customProgramAccount.find((cpa) => cpa.tokenMint == token.mint);
+        const account = programAccount?.accounts.find((pa) => {
+          pa.info.owner == wallet;
+        });
 
-        if (tokenAccount.value.length == 0) {
-          if (index) {
-            index.errors.push(`Didn't mint ${token.name}`);
-          } else errorWallets.push({ wallet, errors: [`Didn't mint ${token.name}`] });
-        } else if (tokenAmount >= 0) {
-          await sleep(500);
-          const tokenAccountBalance = await solConnection.getTokenAccountBalance(tokenAccount.value[0].pubkey);
-          if (tokenAccountBalance.value.uiAmount! < tokenAmount) {
-            if (index) index.errors.push(`Doesn't have the required amount of ${token.name} (${tokenAmount})`);
+        console.log(programAccount);
+
+        if (account) {
+          if (account.info.tokenAmount.uiAmount! < tokenRequiredAmount) {
+            if (index) index.errors.push(`Doesn't have the required amount of ${token.name} (${tokenRequiredAmount})`);
             else
               errorWallets.push({
                 wallet,
-                errors: [`Doesn't have the required amount of ${token.name} (${tokenAmount})`],
+                errors: [`Doesn't have the required amount of ${token.name} (${tokenRequiredAmount})`],
               });
           }
-        }
+        } else if (index) {
+          index.errors.push(`Didn't mint ${token.name}`);
+        } else errorWallets.push({ wallet, errors: [`Didn't mint ${token.name}`] });
         state.progress = state.progress + 1;
       } catch (error) {
         if (error instanceof Error) {

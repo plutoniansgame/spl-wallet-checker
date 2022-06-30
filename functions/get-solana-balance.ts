@@ -1,7 +1,7 @@
 import * as solanaWeb3 from "@solana/web3.js";
 import { sleep } from "helpers/sleep";
-import { Wallets } from "pages/index.page";
 import { state } from "state/state";
+import { Wallets } from "state/types";
 
 const lamportsPerSol = 1000000000;
 export async function getSolanaBalance(wallets: Wallets, minValue: number, solConnection: solanaWeb3.Connection) {
