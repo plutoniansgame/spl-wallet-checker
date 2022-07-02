@@ -85,7 +85,7 @@ const Home: NextPage = () => {
 
     // wallets = await getSolanaBalance(wallets, minumumSol, new solanaWeb3.Connection(urlRPC));
     wallets = await getTokenBalance(wallets, tokenArray, customProgramAccounts);
-
+    console.log(wallets);
     const errorWalletsAsString: string[] = wallets.errorWallets.map((errorWallet) => errorWallet.wallet);
     const filteredValidWallets: string[] = wallets.validSolanaWallets.filter(
       (wallet) => !errorWalletsAsString.includes(wallet),

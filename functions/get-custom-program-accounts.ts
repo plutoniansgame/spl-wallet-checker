@@ -1,5 +1,5 @@
 import * as solanaWeb3 from "@solana/web3.js";
-import { AccountData, CustomProgramAccount } from "state/types";
+import { Account, AccountData, CustomProgramAccount } from "state/types";
 
 const program = new solanaWeb3.PublicKey("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA");
 
@@ -25,8 +25,13 @@ export async function getCustomProgramAccounts(
   return {
     tokenMint: mint,
     tokenName: tokenName,
-    accounts: programAccounts.map(
-      (entry) => (entry.account.data as solanaWeb3.ParsedAccountData).parsed as AccountData,
-    ),
+    accounts: programAccounts.map((entry) => {
+      const data = (entry.account.data as solanaWeb3.ParsedAccountData).parsed as AccountData;
+
+      return {
+        wallet: data.info.owner,
+        amount: data.info.tokenAmount.uiAmount ?? 0,
+      } as Account;
+    }),
   };
 }

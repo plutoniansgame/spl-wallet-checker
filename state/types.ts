@@ -19,6 +19,11 @@ export type AccountData = {
   info: Info;
 };
 
+export type Account = {
+  wallet: string;
+  amount: number;
+};
+
 export type Info = {
   isNative: boolean;
   mint: string;
@@ -30,5 +35,5 @@ export type Info = {
 export type CustomProgramAccount = {
   tokenName: string;
   tokenMint: string;
-  accounts: AccountData[];
+  accounts: Account[];
 };

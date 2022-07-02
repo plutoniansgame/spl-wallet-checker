@@ -18,14 +18,10 @@ export function getTokenBalance(
       try {
         const tokenRequiredAmount = parseInt(token.amount);
         const programAccount = customProgramAccount.find((cpa) => cpa.tokenMint == token.mint);
-        const account = programAccount?.accounts.find((pa) => {
-          pa.info.owner == wallet;
-        });
-
-        console.log(programAccount);
+        const account = programAccount?.accounts.find((pa, index) => pa.wallet == wallet);
 
         if (account) {
-          if (account.info.tokenAmount.uiAmount! < tokenRequiredAmount) {
+          if (account.amount < tokenRequiredAmount) {
             if (index) index.errors.push(`Doesn't have the required amount of ${token.name} (${tokenRequiredAmount})`);
             else
               errorWallets.push({
