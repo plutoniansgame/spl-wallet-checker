@@ -1,6 +1,5 @@
 import { PublicKey } from "@solana/web3.js";
-import { state } from "state/state";
-import { ErrorWallet, Wallets } from "state/types";
+import { ErrorWallet, Wallets } from "types/types";
 
 export function validSolanaWallets(wallets: string[]): Wallets {
   const validSolanaWallets: string[] = [];
@@ -8,7 +7,6 @@ export function validSolanaWallets(wallets: string[]): Wallets {
 
   wallets.map(async (wallet) => {
     wallet = wallet.trim();
-    state.message = `Validating ${wallet}`;
     if (wallet.startsWith("0x")) errorWallets.push({ wallet, errors: ["Ethereum wallet"] });
     try {
       const publickWallet = new PublicKey(wallet);
@@ -23,7 +21,6 @@ export function validSolanaWallets(wallets: string[]): Wallets {
       if (index) index.errors.push("Invalid Solana wallet");
       else errorWallets.push({ wallet, errors: ["Invalid Solana wallet"] });
     }
-    state.progress = state.progress + 1;
   });
   errorWallets.forEach((entry) => {
     validSolanaWallets.splice(validSolanaWallets.indexOf(entry.wallet), 1);

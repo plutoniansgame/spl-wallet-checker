@@ -21,7 +21,7 @@ export type AccountData = {
 
 export type Account = {
   wallet: string;
-  amount: number;
+  amount: number | null;
 };
 
 export type Info = {

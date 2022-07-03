@@ -1,5 +1,6 @@
 import * as solanaWeb3 from "@solana/web3.js";
 
+// deprecated
 const mint = new solanaWeb3.PublicKey("2cJgFtnqjaoiu9fKVX3fny4Z4pRzuaqfJ3PBTMk2D9ur");
 const requiredPLD = 5000;
 export async function getPldBalance(

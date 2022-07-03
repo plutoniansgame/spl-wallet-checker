@@ -1,8 +1,8 @@
 import * as solanaWeb3 from "@solana/web3.js";
 import { sleep } from "helpers/sleep";
-import { state } from "state/state";
-import { Token, Wallets } from "state/types";
+import { Token, Wallets } from "types/types";
 
+//deprecated
 export async function getTokenBalanceFromRPC(tokens: Token[], wallets: Wallets, solConnection: solanaWeb3.Connection) {
   const validSolanaWallets = wallets.validSolanaWallets;
   const errorWallets = wallets.errorWallets;
@@ -11,7 +11,6 @@ export async function getTokenBalanceFromRPC(tokens: Token[], wallets: Wallets, 
   for (let wallet of validSolanaWallets) {
     const publickWallet = new solanaWeb3.PublicKey(wallet);
     for (let token of tokens) {
-      state.message = `Checking ${wallet} for minimum balance of ${token.amount}  ${token.name}`;
       await sleep(500);
       const index = errorWallets.find((w) => w.wallet === wallet);
       try {
@@ -35,7 +34,6 @@ export async function getTokenBalanceFromRPC(tokens: Token[], wallets: Wallets, 
               });
           }
         }
-        state.progress = state.progress + 1;
       } catch (error) {
         if (error instanceof Error) {
           walletToRemoveFromValidWallets.push(wallet);
@@ -52,8 +50,6 @@ export async function getTokenBalanceFromRPC(tokens: Token[], wallets: Wallets, 
 
   if (walletToRemoveFromValidWallets.length > 0)
     walletToRemoveFromValidWallets.forEach((entry) => {
-      state.maxProgress = state.maxProgress - state.tokensToCheckCount;
-
       validSolanaWallets.splice(validSolanaWallets.indexOf(entry), 1);
     });
 

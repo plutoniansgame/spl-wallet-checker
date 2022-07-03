@@ -1,13 +1,13 @@
 import * as solanaWeb3 from "@solana/web3.js";
-import { Account, AccountData, CustomProgramAccount } from "state/types";
-
-const program = new solanaWeb3.PublicKey("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA");
+import { program, RPCURLS } from "types/constants";
+import { Account, AccountData, CustomProgramAccount } from "types/types";
 
 export async function getCustomProgramAccounts(
   tokenName: string,
   mint: string,
-  connection: solanaWeb3.Connection,
+  rpcIndex: number,
 ): Promise<CustomProgramAccount> {
+  const connection = new solanaWeb3.Connection(RPCURLS[rpcIndex]);
   const programAccounts = await connection.getParsedProgramAccounts(program, {
     filters: [
       {

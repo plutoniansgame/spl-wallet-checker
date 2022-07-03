@@ -1,6 +1,4 @@
-import { state } from "state/state";
-
-import { CustomProgramAccount, Token, Wallets } from "./../state/types";
+import { CustomProgramAccount, Token, Wallets } from "../types/types";
 
 export function getTokenBalance(
   wallets: Wallets,
@@ -13,7 +11,6 @@ export function getTokenBalance(
 
   for (let wallet of validSolanaWallets) {
     for (let token of tokens) {
-      state.message = `Checking ${wallet} for minimum balance of ${token.amount}  ${token.name}`;
       const index = errorWallets.find((w) => w.wallet === wallet);
       try {
         const tokenRequiredAmount = parseInt(token.amount);
@@ -21,7 +18,7 @@ export function getTokenBalance(
         const account = programAccount?.accounts.find((pa, index) => pa.wallet == wallet);
 
         if (account) {
-          if (account.amount < tokenRequiredAmount) {
+          if (account.amount !== null && account.amount < tokenRequiredAmount) {
             if (index) index.errors.push(`Doesn't have the required amount of ${token.name} (${tokenRequiredAmount})`);
             else
               errorWallets.push({
@@ -32,7 +29,6 @@ export function getTokenBalance(
         } else if (index) {
           index.errors.push(`Didn't mint ${token.name}`);
         } else errorWallets.push({ wallet, errors: [`Didn't mint ${token.name}`] });
-        state.progress = state.progress + 1;
       } catch (error) {
         if (error instanceof Error) {
           walletToRemoveFromValidWallets.push(wallet);
@@ -49,8 +45,6 @@ export function getTokenBalance(
 
   if (walletToRemoveFromValidWallets.length > 0)
     walletToRemoveFromValidWallets.forEach((entry) => {
-      state.maxProgress = state.maxProgress - state.tokensToCheckCount;
-
       validSolanaWallets.splice(validSolanaWallets.indexOf(entry), 1);
     });
 

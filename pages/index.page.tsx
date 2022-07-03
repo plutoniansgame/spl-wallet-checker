@@ -1,18 +1,19 @@
+import CheckIcon from "@mui/icons-material/Check";
 import FileUploadIcon from "@mui/icons-material/FileUpload";
 import {
   Box,
   Button,
   Checkbox,
+  CircularProgress,
   FormControlLabel,
   Grid,
   Input,
-  LinearProgress,
   TextareaAutosize,
   TextField,
   Typography,
 } from "@mui/material";
-import * as solanaWeb3 from "@solana/web3.js";
 import { getCustomProgramAccounts } from "functions/get-custom-program-accounts";
+import { getSolanaBalance } from "functions/get-solana-balance";
 import { getTokenBalance } from "functions/get-token-balance";
 import { validSolanaWallets } from "functions/valid-solana-wallet";
 import { convertLetterToNumber } from "helpers/convert-letter-to-number";
@@ -21,12 +22,10 @@ import Head from "next/head";
 import { serverSideTranslations } from "next-i18next/serverSideTranslations";
 import { ChangeEvent, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { state } from "state/state";
-import { Token, Wallets } from "state/types";
-import { useSnapshot } from "valtio";
+import { Token, Wallets } from "types/types";
 
 require("@solana/wallet-adapter-react-ui/styles.css");
-const urlRPC = "https://api.mainnet-beta.solana.com";
+
 const Home: NextPage = () => {
   const { t } = useTranslation("common");
   const [fileHasTitles, setFileHasTitles] = useState(false);
@@ -35,12 +34,12 @@ const Home: NextPage = () => {
     { mint: "2cJgFtnqjaoiu9fKVX3fny4Z4pRzuaqfJ3PBTMk2D9ur", amount: "5000", name: "PLD" },
     { mint: "EAefyXw6E8sny1cX3LTH6RSvtzH6E5EFy1XsE2AiH1f3", amount: "10000", name: "RPC" },
   ]);
-  const [minumumSol, setMinimumSol] = useState(0.25);
+  const [minimumSol, setMinimumSol] = useState(0.25);
   const [fileAsString, setFileAsString] = useState("");
   const [errorWalletsString, setErrorWalletsString] = useState<string[]>([]);
   const [validWallets, setValidWallets] = useState<string[]>([]);
-  const snap = useSnapshot(state);
-
+  const [isValidation, setIsValidating] = useState(false);
+  const [finished, setFinished] = useState(false);
   function updateTokenMints(index: number, mint: string) {
     const newTokenArray = [...tokenArray];
     newTokenArray[index].mint = mint;
@@ -74,24 +73,27 @@ const Home: NextPage = () => {
   }
 
   async function validateWallets(inputWallets: string[]) {
-    state.setInformation(inputWallets.length, 2 + tokenArray.length, tokenArray.length);
+    setIsValidating(true);
     let wallets: Wallets = validSolanaWallets(inputWallets);
 
+    wallets = await getSolanaBalance(wallets, minimumSol, tokenArray.length % 2 == 0 ? 0 : 1);
+
     const customProgramAccounts = await Promise.all(
-      tokenArray.map(async (token) => {
-        return await getCustomProgramAccounts(token.name, token.mint, new solanaWeb3.Connection(urlRPC));
+      tokenArray.map(async (token, index) => {
+        return await getCustomProgramAccounts(token.name, token.mint, index % 2 == 0 ? 0 : 1);
       }),
     );
 
-    // wallets = await getSolanaBalance(wallets, minumumSol, new solanaWeb3.Connection(urlRPC));
     wallets = await getTokenBalance(wallets, tokenArray, customProgramAccounts);
-    console.log(wallets);
+
     const errorWalletsAsString: string[] = wallets.errorWallets.map((errorWallet) => errorWallet.wallet);
     const filteredValidWallets: string[] = wallets.validSolanaWallets.filter(
       (wallet) => !errorWalletsAsString.includes(wallet),
     );
     setValidWallets(filteredValidWallets);
     setErrorWalletsString(errorWalletsAsString);
+    setIsValidating(false);
+    setFinished(true);
   }
 
   function fileChangeHandler(event: ChangeEvent<HTMLInputElement>) {
@@ -147,12 +149,14 @@ const Home: NextPage = () => {
               onChange={(e) => setAddressColumn(e.target.value)}
               variant="outlined"
             />
-            <Button onClick={submit}>GO</Button>
+            <Button onClick={submit} variant="contained" sx={{ color: "white", marginTop: 1 }}>
+              GO
+            </Button>
           </Grid>
           <Grid item xs={2}>
             <Typography variant="h3">{t("SolSection.solana")}</Typography>
             <TextField
-              value={minumumSol}
+              value={minimumSol}
               sx={{ width: "100%" }}
               type="number"
               label={t("SolSection.min-needed")}
@@ -164,7 +168,7 @@ const Home: NextPage = () => {
             <Typography variant="h3">{t("TokenSection.title")}</Typography>
             <Box>
               {tokenArray.map((token, index) => (
-                <Box key={index} sx={{ margin: 1 }}>
+                <Box key={index}>
                   <TextField
                     sx={{ width: "100px", margin: 0.5 }}
                     label={t("TokenSection.token-name")}
@@ -202,31 +206,27 @@ const Home: NextPage = () => {
           </Grid>
         </Grid>
       </Box>
-      <Box sx={{ width: "100%", display: "flex", justifyContent: "center" }}>
-        <Box sx={{ width: "50%" }}>
-          <Typography variant="body2" sx={{ textAlign: "center" }}>
-            {snap.message}
-          </Typography>
-          <LinearProgress variant="determinate" value={Math.round((snap.progress / snap.maxProgress) * 100)} />
-          <Typography variant="body2" sx={{ textAlign: "center" }}>
-            {/* Add Time Left */}
-            {snap.progress} / {snap.maxProgress}
-          </Typography>
+      <Box sx={{ width: "100%", display: "flex", justifyContent: "center", height: "2.5rem" }}>
+        <Box>
+          {isValidation && <CircularProgress />}
+          {finished && !isValidation && <CheckIcon fontSize="large" sx={{ fill: "green" }} />}
         </Box>
       </Box>
       <Box sx={{ width: "100%", display: "flex", justifyContent: "center", marginTop: 2.5 }}>
         <Box sx={{ width: "50%", display: "flex", justifyContent: "space-between" }}>
           <TextareaAutosize
             minRows={20}
+            maxRows={20}
             placeholder="Valid wallets"
             value={validWallets}
-            style={{ width: 450, marginRight: "auto" }}
+            style={{ width: 450, marginRight: "auto", resize: "none" }}
           />
           <TextareaAutosize
             minRows={20}
+            maxRows={20}
             placeholder="Error wallets"
             value={errorWalletsString}
-            style={{ width: 450, marginLeft: "auto" }}
+            style={{ width: 450, marginLeft: "auto", resize: "none" }}
           />
         </Box>
       </Box>
