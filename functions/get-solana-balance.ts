@@ -25,7 +25,7 @@ export async function getSolanaBalance(wallets: Wallets, minValue: Number): Prom
       } as Account;
     });
 
-    sleep(1000);
+    await sleep(200);
 
     const programAccounts = await connection.getMultipleAccountsInfo(wallets);
     programAccounts.forEach((pa, index) => {
