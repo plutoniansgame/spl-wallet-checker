@@ -17,6 +17,7 @@ import { getSolanaBalance } from "functions/get-solana-balance";
 import { getTokenBalance } from "functions/get-token-balance";
 import { validSolanaWallets } from "functions/valid-solana-wallet";
 import { convertLetterToNumber } from "helpers/convert-letter-to-number";
+import { millisToTime } from "helpers/millis-to-time";
 import type { GetStaticProps, NextPage } from "next";
 import Head from "next/head";
 import { serverSideTranslations } from "next-i18next/serverSideTranslations";
@@ -73,10 +74,11 @@ const Home: NextPage = () => {
   }
 
   async function validateWallets(inputWallets: string[]) {
+    const start = new Date().getTime();
     setIsValidating(true);
     let wallets: Wallets = validSolanaWallets(inputWallets);
 
-    wallets = await getSolanaBalance(wallets, minimumSol, tokenArray.length % 2 == 0 ? 0 : 1);
+    wallets = await getSolanaBalance(wallets, minimumSol);
 
     const customProgramAccounts = await Promise.all(
       tokenArray.map(async (token, index) => {
@@ -94,6 +96,10 @@ const Home: NextPage = () => {
     setErrorWalletsString(errorWalletsAsString);
     setIsValidating(false);
     setFinished(true);
+    const end = new Date().getTime();
+    const time = end - start;
+    console.log(inputWallets.length);
+    console.log(millisToTime(time));
   }
 
   function fileChangeHandler(event: ChangeEvent<HTMLInputElement>) {
