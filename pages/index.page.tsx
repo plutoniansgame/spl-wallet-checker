@@ -150,7 +150,7 @@ const Home: NextPage = () => {
               variant="outlined"
             />
             <Button onClick={submit} variant="contained" sx={{ color: "white", marginTop: 1 }}>
-              GO
+              {t("buttons.start")}
             </Button>
           </Grid>
           <Grid item xs={2}>
@@ -198,10 +198,18 @@ const Home: NextPage = () => {
                 onClick={() => {
                   if (tokenArray.length != 3) setTokenArray([...tokenArray, { mint: "", amount: "", name: "" }]);
                 }}
+                variant="contained"
+                sx={{ color: "white", marginTop: 1 }}
               >
-                Add
+                {t("buttons.add")}
               </Button>
-              <Button onClick={() => setTokenArray(tokenArray.slice(0, -1))}>Remove</Button>
+              <Button
+                onClick={() => setTokenArray(tokenArray.slice(0, -1))}
+                variant="contained"
+                sx={{ color: "white", marginTop: 1, marginLeft: 1 }}
+              >
+                {t("buttons.remove")}
+              </Button>
             </Box>
           </Grid>
         </Grid>

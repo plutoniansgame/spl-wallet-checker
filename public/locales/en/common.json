@@ -19,5 +19,11 @@
     "title": "RPC",
     "url": "URL",
     "requests-per-second": "Requests per second"
+  },
+    "buttons": {
+    "start":"start",
+    "add": "add",
+    "remove": "remove"
   }
+
 }

@@ -2,7 +2,7 @@
   "FileSection": {
     "file": "Bestand",
     "upload-csv": "Upload CSV",
-    "first-row-are-titles": "Eerste rij zijn titles.",
+    "first-row-are-titles": "Eerste rij zijn titels.",
     "addresses-in-column": "Adressen in kolom"
   },
   "SolSection": {
@@ -19,5 +19,10 @@
     "title": "RPC",
     "url": "URL",
     "requests-per-second": "Aantal requests per seconde"
+  },
+  "buttons": {
+    "start":"start",
+    "add": "Toevoegen",
+    "remove": "verwijderen"
   }
 }
