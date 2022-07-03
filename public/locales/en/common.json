@@ -20,7 +20,9 @@
     "url": "URL",
     "requests-per-second": "Requests per second"
   },
-    "buttons": {
+  "buttons": {
+    "download-valid": "Download valid wallets",
+    "download-invalid": "Download invalid wallets",
     "start":"start",
     "add": "add",
     "remove": "remove"

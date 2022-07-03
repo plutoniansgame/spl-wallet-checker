@@ -21,6 +21,8 @@
     "requests-per-second": "Aantal requests per seconde"
   },
   "buttons": {
+    "download-valid": "Download geldige wallets",
+    "download-invalid": "Download ongeldige wallets",
     "start":"start",
     "add": "Toevoegen",
     "remove": "verwijderen"

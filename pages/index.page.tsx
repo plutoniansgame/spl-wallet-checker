@@ -17,11 +17,11 @@ import { getSolanaBalance } from "functions/get-solana-balance";
 import { getTokenBalance } from "functions/get-token-balance";
 import { validSolanaWallets } from "functions/valid-solana-wallet";
 import { convertLetterToNumber } from "helpers/convert-letter-to-number";
-import { millisToTime } from "helpers/millis-to-time";
 import type { GetStaticProps, NextPage } from "next";
 import Head from "next/head";
 import { serverSideTranslations } from "next-i18next/serverSideTranslations";
 import { ChangeEvent, useState } from "react";
+import { CSVLink } from "react-csv";
 import { useTranslation } from "react-i18next";
 import { Token, Wallets } from "types/types";
 
@@ -41,6 +41,9 @@ const Home: NextPage = () => {
   const [validWallets, setValidWallets] = useState<string[]>([]);
   const [isValidation, setIsValidating] = useState(false);
   const [finished, setFinished] = useState(false);
+  const [validWalletsCsv, setValidWalletsCsv] = useState<string[][]>([]);
+  const [invalidWalletsCsv, setinValidWalletsCsv] = useState<string[][]>([]);
+
   function updateTokenMints(index: number, mint: string) {
     const newTokenArray = [...tokenArray];
     newTokenArray[index].mint = mint;
@@ -74,7 +77,6 @@ const Home: NextPage = () => {
   }
 
   async function validateWallets(inputWallets: string[]) {
-    const start = new Date().getTime();
     setIsValidating(true);
     let wallets: Wallets = validSolanaWallets(inputWallets);
 
@@ -96,10 +98,12 @@ const Home: NextPage = () => {
     setErrorWalletsString(errorWalletsAsString);
     setIsValidating(false);
     setFinished(true);
-    const end = new Date().getTime();
-    const time = end - start;
-    console.log(inputWallets.length);
-    console.log(millisToTime(time));
+
+    const validWalletsCsv: string[][] = filteredValidWallets.map((w) => [w]);
+    setValidWalletsCsv(validWalletsCsv);
+
+    const invalidWalletsCsv: string[][] = wallets.errorWallets.map((w) => [w.wallet, w.errors.toString()]);
+    setinValidWalletsCsv(invalidWalletsCsv);
   }
 
   function fileChangeHandler(event: ChangeEvent<HTMLInputElement>) {
@@ -235,6 +239,7 @@ const Home: NextPage = () => {
             value={validWallets}
             style={{ width: 450, marginRight: "auto", resize: "none" }}
           />
+
           <TextareaAutosize
             minRows={20}
             maxRows={20}
@@ -242,6 +247,24 @@ const Home: NextPage = () => {
             value={errorWalletsString}
             style={{ width: 450, marginLeft: "auto", resize: "none" }}
           />
+        </Box>
+      </Box>
+      <Box sx={{ width: "100%", display: "flex", justifyContent: "center", marginTop: 2.5 }}>
+        <Box sx={{ width: "50%", display: "flex", justifyContent: "space-between" }}>
+          <Button variant="contained" sx={{ color: "white", marginTop: 1 }}>
+            {validWalletsCsv && (
+              <CSVLink data={validWalletsCsv} filename="valid-wallets.csv">
+                {t("buttons.download-valid")}
+              </CSVLink>
+            )}
+          </Button>
+          <Button variant="contained" sx={{ color: "white", marginTop: 1 }}>
+            {invalidWalletsCsv && (
+              <CSVLink data={invalidWalletsCsv} filename="invalid-wallets.csv">
+                {t("buttons.download-invalid")}
+              </CSVLink>
+            )}
+          </Button>
         </Box>
       </Box>
     </>
