@@ -30,11 +30,8 @@ require("@solana/wallet-adapter-react-ui/styles.css");
 const Home: NextPage = () => {
   const { t } = useTranslation("common");
   const [fileHasTitles, setFileHasTitles] = useState(false);
-  const [addressColumn, setAddressColumn] = useState("E");
-  const [tokenArray, setTokenArray] = useState<Token[]>([
-    { mint: "2cJgFtnqjaoiu9fKVX3fny4Z4pRzuaqfJ3PBTMk2D9ur", amount: "5000", name: "PLD" },
-    { mint: "EAefyXw6E8sny1cX3LTH6RSvtzH6E5EFy1XsE2AiH1f3", amount: "10000", name: "RPC" },
-  ]);
+  const [addressColumn, setAddressColumn] = useState("A");
+  const [tokenArray, setTokenArray] = useState<Token[]>([{ amount: "0", mint: "", name: "" }]);
   const [minimumSol, setMinimumSol] = useState(0.25);
   const [fileAsString, setFileAsString] = useState("");
   const [errorWalletsString, setErrorWalletsString] = useState<string[]>([]);
